@@ -48,8 +48,10 @@
         .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
         #txt-originale { font-size: 16px; font-weight: 500; min-height: 22px; color: var(--text-main); }
-        #txt-tradotto { font-size: 20px; font-weight: 700; color: var(--accent); margin-top: 8px; }
-        #txt-fonetica { font-size: 14px; font-style: italic; color: var(--primary); margin-top: 4px; font-weight: 600; }
+        
+        /* FOCUS SULLA LETTURA */
+        #txt-tradotto { font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 8px; }
+        #txt-originale-thai { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
         #txt-tutor { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; line-height: 1.4; }
 
         button#start-btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -80,22 +82,20 @@
     </div>
 
     <div class="display-box">
-        <div class="label">Come si legge:</div>
+        <div class="label">Leggi così:</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-fonetica">Trascrizione fonetica...</div>
-        <div id="txt-tutor">Attiva e parla per vedere la pronuncia.</div>
+        <div id="txt-originale-thai">...</div>
+        <div id="txt-tutor">Parla e attendi la modalità ripetizione.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR FONETICO</button>
+    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR FACILE</button>
 </div>
 
 <script>
-    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    
-    let ultimaTraduzione = "";
+    let recognition;
+    let ultimaTraduzioneTesto = "";
     let modoStraniero = false;
+    window.isStarted = false;
 
     function swapLangs() {
         const s = document.getElementById('lang-source');
@@ -103,97 +103,103 @@
         const temp = s.value; s.value = t.value; t.value = temp;
     }
 
-    function impostaRiconoscimento(lang) {
-        if(recognition) recognition.stop();
+    function creaRiconoscimento(lang) {
+        if (recognition) {
+            recognition.onend = null;
+            recognition.stop();
+        }
+        
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = lang;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
         recognition.onstart = () => {
-            document.getElementById('status').innerText = modoStraniero ? "🔵 RIPETI LA PRONUNCIA" : "🔴 PARLA IN ITALIANO";
+            document.getElementById('status').innerText = modoStraniero ? "🔵 RIPETI ORA (LINGUA ESTERA)" : "🔴 ASCOLTO (ITALIANO)";
             document.getElementById('status').style.color = modoStraniero ? "#3b82f6" : "#10b981";
         };
-        recognition.onresult = gestisciRisultato;
-        recognition.onend = () => { if(window.isStarted) recognition.start(); };
+
+        recognition.onresult = async (event) => {
+            const input = event.results[0][0].transcript;
+            const inputLower = input.toLowerCase().trim();
+            document.getElementById('txt-originale').innerText = input;
+
+            if (modoStraniero) {
+                const target = ultimaTraduzioneTesto.toLowerCase().trim();
+                // Controllo flessibile
+                if (inputLower.includes(target) || target.includes(inputLower)) {
+                    updateUI("BRAVO!", "", "Ottima pronuncia!");
+                    await parla("Bravo!", "it-IT");
+                    modoStraniero = false;
+                    setTimeout(() => creaRiconoscimento(document.getElementById('lang-source').value), 500);
+                } else {
+                    updateUI("RIPROVA", ultimaTraduzioneTesto, "Non ho capito, riprova a leggere.");
+                    await parla("Riprova", "it-IT");
+                    await parla(ultimaTraduzioneTesto, document.getElementById('lang-target').value);
+                }
+            } else {
+                const sl = document.getElementById('lang-source').value.split('-')[0];
+                const tl = document.getElementById('lang-target').value.split('-')[0];
+                
+                const data = await getCleanTranslation(input, sl, tl);
+                ultimaTraduzioneTesto = data.text;
+
+                updateUI(data.phonetic, data.text, "Ripeti la parola blu.");
+                await parla(data.text, document.getElementById('lang-target').value);
+                
+                modoStraniero = true;
+                // Pausa tecnica per permettere al browser di cambiare motore linguistico
+                setTimeout(() => creaRiconoscimento(document.getElementById('lang-target').value), 600);
+            }
+        };
+
+        recognition.onend = () => {
+            if(window.isStarted) {
+                setTimeout(() => { try { recognition.start(); } catch(e) {} }, 300);
+            }
+        };
+
         try { recognition.start(); } catch(e) {}
     }
 
-    async function gestisciRisultato(event) {
-        const input = event.results[event.results.length - 1][0].transcript;
-        const inputLower = input.toLowerCase().trim().replace(/[.,?!]/g, "");
-        document.getElementById('txt-originale').innerText = input;
-
-        if (modoStraniero) {
-            const target = ultimaTraduzione.toLowerCase().trim().replace(/[.,?!]/g, "");
-            if (inputLower === target || inputLower.includes(target) || target.includes(inputLower)) {
-                updateUI("BRAVO!", "", "Pronuncia corretta!");
-                await parla("Ottimo!", "it-IT");
-                modoStraniero = false;
-                impostaRiconoscimento(document.getElementById('lang-source').value);
-            } else {
-                updateUI("SBAGLIATO", "", "Riprova seguendo la fonetica.");
-                await parla("Non è corretto.", "it-IT");
-                await parla(ultimaTraduzione, document.getElementById('lang-target').value);
-            }
-        } else {
-            const sl = document.getElementById('lang-source').value.split('-')[0];
-            const tl = document.getElementById('lang-target').value.split('-')[0];
-            
-            // Chiamata a Google Translate con richiesta di fonetica
-            const data = await getTranslationData(input, sl, tl);
-            
-            ultimaTraduzione = data.text;
-            // Mostriamo la fonetica come testo principale se la lingua è thai
-            const displayTesto = tl === "th" ? data.phonetic : data.text;
-            const displaySub = tl === "th" ? data.text : "";
-
-            updateUI(displayTesto, displaySub, "Ascolta e ripeti ciò che vedi.");
-            await parla(data.text, document.getElementById('lang-target').value);
-            
-            modoStraniero = true;
-            impostaRiconoscimento(document.getElementById('lang-target').value);
-        }
-    }
-
-    async function getTranslationData(text, sl, tl) {
+    async function getCleanTranslation(text, sl, tl) {
         try {
             const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(text)}`);
             const data = await res.json();
-            
-            // data[0][0][0] è il testo tradotto
-            // data[0][1] o data[0][0][3] contengono solitamente la fonetica
-            let translatedText = data[0].map(i => i[0]).join("");
+            let textOut = data[0][0][0];
             let phonetic = "";
-            
-            if (data[0][1] && data[0][1][3]) {
-                phonetic = data[0][1][3];
-            } else if (data[0][0][3]) {
-                phonetic = data[0][0][3];
-            }
 
-            return { text: translatedText, phonetic: phonetic || translatedText };
-        } catch (e) { return { text: "Errore", phonetic: "" }; }
+            // Cerca la fonetica corretta nell'oggetto di risposta
+            if (data[0][1] && data[0][1][3]) phonetic = data[0][1][3];
+            else if (data[5] && data[5][0] && data[5][0][2]) phonetic = data[5][0][2];
+            else phonetic = textOut;
+
+            return { 
+                text: textOut, 
+                phonetic: phonetic.normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Pulisce accenti complessi
+            };
+        } catch (e) { return { text: "Errore", phonetic: "Error" }; }
     }
 
     function parla(testo, lang) {
         return new Promise(res => {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(testo);
-            u.lang = lang; u.rate = 0.75; u.onend = res;
+            u.lang = lang; u.rate = 0.7; u.onend = res;
             window.speechSynthesis.speak(u);
         });
     }
 
-    function updateUI(tr, fon, tut) {
-        const tDisp = document.getElementById('txt-tradotto');
-        const fDisp = document.getElementById('txt-fonetica');
-        tDisp.innerText = tr;
-        fDisp.innerText = fon;
-        tDisp.style.color = (tr === "SBAGLIATO") ? "#ef4444" : "#10b981";
-        document.getElementById('txt-tutor').innerText = tut;
+    function updateUI(main, sub, tutor) {
+        document.getElementById('txt-tradotto').innerText = main;
+        document.getElementById('txt-originale-thai').innerText = sub;
+        document.getElementById('txt-tutor').innerText = tutor;
+        document.getElementById('txt-tradotto').style.color = (main === "RIPROVA") ? "#ef4444" : "#4f46e5";
     }
 
     function inizia() {
         window.isStarted = true;
-        impostaRiconoscimento(document.getElementById('lang-source').value);
+        creaRiconoscimento(document.getElementById('lang-source').value);
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
     }
 </script>
