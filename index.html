@@ -17,6 +17,7 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
             --accent: #10b981;
+            --warning: #f59e0b;
         }
 
         body { 
@@ -46,7 +47,10 @@
         select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
         .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
 
-        .mode-badge { display: inline-block; padding: 5px 15px; background: #eef2ff; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 15px; }
+        /* NUOVI TASTI MODALITÀ */
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
+        .mode-btn { flex: 1; padding: 8px; font-size: 10px; font-weight: 700; border-radius: 10px; border: 2px solid #e2e8f0; cursor: pointer; background: white; color: var(--text-sub); transition: 0.2s; }
+        .mode-btn.active { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
 
         .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
@@ -56,12 +60,8 @@
 
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         button#start-btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
-        button#info-btn { background: transparent; border: 1px solid #e2e8f0; padding: 12px; border-radius: 16px; color: var(--text-sub); font-size: 13px; cursor: pointer; }
         
         button:active { transform: scale(0.97); }
-
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: left; }
     </style>
 </head>
 <body>
@@ -83,7 +83,11 @@
         </select>
     </div>
 
-    <div id="current-mode" class="mode-badge">MODALITÀ: DIALOGO</div>
+    <div class="mode-selector">
+        <button id="btn-dialogo" class="mode-btn active" onclick="setManualMode('DIALOGO')">DIALOGO</button>
+        <button id="btn-supporto" class="mode-btn" onclick="setManualMode('SUPPORTO')">SUPPORTO</button>
+        <button id="btn-lezione" class="mode-btn" onclick="setManualMode('LEZIONE')">LEZIONE</button>
+    </div>
     
     <div class="display-box">
         <div class="label">Input Rilevato</div>
@@ -93,24 +97,11 @@
     <div class="display-box">
         <div class="label">Tutor & Traduzione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Dì "Spiegami..." o "Come si dice..."</div>
+        <div id="txt-tutor">Seleziona una modalità e parla</div>
     </div>
 
     <div class="btn-group">
         <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
-        <button id="info-btn" onclick="toggleModal(true)">COME FUNZIONA?</button>
-    </div>
-</div>
-
-<div id="modal" onclick="toggleModal(false)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="margin-top:0; color:var(--primary)">Guida Rapida</h3>
-        <ul style="font-size:14px; padding-left:20px">
-            <li><strong>"Come si dice...":</strong> Traduce e ti fa ripetere.</li>
-            <li><strong>"Spiegami...":</strong> Spiegazione grammaticale.</li>
-            <li><strong>Dialogo:</strong> Traduzione continua automatica. [cite: 2026-02-02]</li>
-        </ul>
-        <button onclick="toggleModal(false)" style="width:100%; padding:12px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:bold;">Ho capito</button>
     </div>
 </div>
 
@@ -118,6 +109,8 @@
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
     recognition.interimResults = false;
+    
+    let currentMode = "DIALOGO";
     let fraseTarget = "";
     let staRipetendo = false;
 
@@ -127,7 +120,20 @@
         const temp = s.value; s.value = t.value; t.value = temp;
     }
 
-    function toggleModal(show) { document.getElementById('modal').style.display = show ? 'flex' : 'none'; }
+    function setManualMode(m) {
+        currentMode = m;
+        staRipetendo = false;
+        // Aggiorna grafica tasti
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-' + m.toLowerCase()).classList.add('active');
+        
+        const info = {
+            'DIALOGO': 'Traduzione istantanea libera.',
+            'SUPPORTO': 'Dì qualcosa e ti sfiderò a ripeterlo.',
+            'LEZIONE': 'Spiegherò la grammatica di ciò che dici.'
+        };
+        updateUI("...", info[m]);
+    }
 
     recognition.onstart = () => {
         document.getElementById('status').innerText = "🔴 ASCOLTO ATTIVO";
@@ -136,8 +142,7 @@
 
     recognition.onresult = async (event) => {
         const input = event.results[event.results.length - 1][0].transcript;
-        // CORREZIONE LOGICA: Pulizia profonda del testo
-        const inputLower = input.toLowerCase().trim().replace(/[.,?!]/g, ""); 
+        const inputLower = input.toLowerCase().trim();
         const sFull = document.getElementById('lang-source').value;
         const tFull = document.getElementById('lang-target').value;
         const sl = sFull.split('-')[0];
@@ -145,6 +150,7 @@
 
         document.getElementById('txt-originale').innerText = input;
 
+        // LOGICA DI RIPETIZIONE (Attiva in SUPPORTO e LEZIONE dopo la prima frase)
         if (staRipetendo) {
             const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
             const cleanTarget = fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
@@ -152,35 +158,30 @@
                 updateUI("BRAVO!", "Pronuncia perfetta.");
                 await parla("Ottimo!", "it-IT");
                 staRipetendo = false;
-                setMode("DIALOGO");
             } else {
                 await parla("Riprova: " + fraseTarget, tFull);
             }
             return;
         }
 
-        // TRIGGER COMANDI CON LOGICA RINFORZATA
-        if (inputLower.startsWith("spiegami")) {
-            setMode("LEZIONE");
-            const tema = inputLower.replace("spiegami", "").trim();
-            const spiegazione = `Per "${tema}" si usa questa forma. Ripeti l'esempio.`;
-            const esempioTrad = await translate("Esempio di " + tema, sl, tl);
+        // ESECUZIONE IN BASE ALLA MODALITÀ SELEZIONATA MANUALMENTE
+        if (currentMode === "LEZIONE") {
+            const spiegazione = `Per "${inputLower}" si usa questa forma. Ripeti l'esempio.`;
+            const esempioTrad = await translate("Esempio di " + inputLower, sl, tl);
             updateUI(esempioTrad, spiegazione);
             await parla(spiegazione, "it-IT");
             await parla(esempioTrad, tFull);
             fraseTarget = esempioTrad; 
             staRipetendo = true;
         } 
-        else if (inputLower.startsWith("come si dice")) {
-            setMode("SUPPORTO");
-            const q = inputLower.replace("come si dice", "").trim();
-            const trad = await translate(q, sl, tl);
+        else if (currentMode === "SUPPORTO") {
+            const trad = await translate(input, sl, tl);
             updateUI(trad, "Ripeti per imparare.");
             await parla("Si dice: " + trad, tFull);
             fraseTarget = trad; 
             staRipetendo = true;
-        } else {
-            setMode("DIALOGO");
+        } 
+        else { // DIALOGO
             const trad = await translate(input, sl, tl);
             updateUI(trad, "Traduzione istantanea");
             await parla(trad, tFull);
@@ -197,10 +198,7 @@
         return new Promise(res => {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(testo);
-            u.lang = lang; 
-            u.rate = 0.85; 
-            u.volume = 1.0; 
-            u.onend = res;
+            u.lang = lang; u.rate = 0.85; u.volume = 1.0; u.onend = res;
             window.speechSynthesis.speak(u);
         });
     }
@@ -210,13 +208,10 @@
         document.getElementById('txt-tutor').innerText = tut;
     }
 
-    function setMode(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
-
     function inizia() {
         const sblocco = new SpeechSynthesisUtterance("Audio attivo");
         sblocco.lang = "it-IT";
         window.speechSynthesis.speak(sblocco);
-
         recognition.lang = document.getElementById('lang-source').value;
         try { recognition.start(); } catch(e) {}
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
