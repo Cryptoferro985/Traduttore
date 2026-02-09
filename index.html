@@ -3,24 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutor Linguistico Hands-Free</title>
+    <title>Tutor Linguistico Pro</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        #status { font-weight: bold; color: #d93025; margin-bottom: 15px; font-size: 13px; letter-spacing: 1px; }
-        
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
-        select { padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff; flex: 1; font-size: 14px; }
-        .swap-btn { background: #f0f2f5; color: #1a73e8; border: none; padding: 10px; border-radius: 10px; cursor: pointer; }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --accent: #10b981;
+        }
 
-        .display-box { min-height: 80px; border: 1px solid #e4e6eb; border-radius: 12px; margin: 15px 0; padding: 15px; text-align: left; background: #f7f8fa; }
-        .label { font-size: 11px; color: #65676b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        #txt-originale { color: #1a73e8; font-size: 18px; }
-        #txt-tradotto { color: #188038; font-size: 20px; font-weight: bold; }
-        #txt-tutor { color: #444; font-size: 15px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; line-height: 1.4; }
-        
-        button#start-btn { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
-        .mode-indicator { font-size: 12px; background: #e7f3ff; color: #1877f2; padding: 6px 12px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 420px; 
+            background: var(--card); 
+            padding: 30px; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            margin: 15px;
+        }
+
+        #status { 
+            font-size: 12px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            color: #ef4444;
+            margin-bottom: 20px;
+        }
+
+        .controls { 
+            display: flex; 
+            gap: 12px; 
+            align-items: center; 
+            margin-bottom: 25px; 
+        }
+
+        select { 
+            flex: 1;
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+            background: #fff; 
+            font-size: 15px;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .swap-btn { 
+            background: #f1f5f9; 
+            border: none; 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 10px; 
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .mode-badge { 
+            display: inline-block;
+            padding: 6px 16px;
+            background: #eef2ff;
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .display-box { 
+            text-align: left;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 15px;
+        }
+
+        .label { 
+            font-size: 11px; 
+            font-weight: 800; 
+            color: var(--text-sub); 
+            text-transform: uppercase; 
+            margin-bottom: 8px; 
+        }
+
+        #txt-originale { font-size: 18px; font-weight: 500; min-height: 24px; }
+        #txt-tradotto { font-size: 22px; font-weight: 700; color: var(--accent); margin-top: 10px; }
+        #txt-tutor { 
+            font-size: 14px; 
+            color: var(--text-sub); 
+            margin-top: 12px; 
+            padding-top: 12px; 
+            border-top: 1px solid #e2e8f0; 
+            line-height: 1.5;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
+
+        button#start-btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 16px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button#info-btn { 
+            background: transparent; 
+            color: var(--text-sub); 
+            border: 1px solid #e2e8f0; 
+            padding: 12px; 
+            border-radius: 16px; 
+            font-size: 14px; 
+            cursor: pointer;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        /* Guida Modale */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 25px;
+            max-width: 85%; text-align: left;
+        }
+        .modal-content h3 { margin-top: 0; color: var(--primary); }
+        .modal-content ul { padding-left: 20px; font-size: 14px; color: var(--text-sub); }
+        .modal-content li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -30,32 +162,48 @@
     
     <div class="controls">
         <select id="lang-source">
-            <option value="it-IT" selected>🇮🇹 Italiano</option>
-            <option value="th-TH">🇹🇭 Thailandese</option>
+            <option value="it-IT">🇮🇹 Italiano</option>
+            <option value="th-TH">🇹🇭 Thai</option>
             <option value="en-US">🇺🇸 Inglese</option>
         </select>
         <button class="swap-btn" onclick="swapLangs()">⇄</button>
         <select id="lang-target">
-            <option value="th-TH" selected>🇹🇭 Thailandese</option>
-            <option value="en-US">🇺🇸 Inglese</option>
+            <option value="th-TH">🇹🇭 Thai</option>
+            <option value="en-US" selected>🇺🇸 Inglese</option>
             <option value="it-IT">🇮🇹 Italiano</option>
         </select>
     </div>
 
-    <div id="current-mode" class="mode-indicator">MODALITÀ: DIALOGO</div>
+    <div id="current-mode" class="mode-badge">MODALITÀ: DIALOGO</div>
     
     <div class="display-box">
-        <div class="label">Input:</div>
-        <div id="txt-originale">In attesa...</div>
+        <div class="label">Input Rilevato</div>
+        <div id="txt-originale">...</div>
     </div>
 
     <div class="display-box">
-        <div class="label">Tutor (Google Translate):</div>
+        <div class="label">Tutor & Traduzione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Dì "Spiegami..." per attivare il tutor.</div>
+        <div id="txt-tutor">Pronto ad aiutarti.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
+    <div class="btn-group">
+        <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
+        <button id="info-btn" onclick="toggleModal(true)">COME FUNZIONA?</button>
+    </div>
+</div>
+
+<div id="modal" onclick="toggleModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>Guida Funzioni</h3>
+        <ul>
+            <li><strong>Dialogo Libero:</strong> Parla normalmente, il sistema traduce e legge ad alta voce.</li>
+            <li><strong>Supporto Pronuncia:</strong> Dì <em>"Come si dice..."</em>. Il bot traduce e ti sfida a ripetere finché la pronuncia non è corretta.</li>
+            <li><strong>Lezione Grammatica:</strong> Dì <em>"Spiegami..."</em> (es. "Spiegami il passato"). Il bot spiega la regola e ti fa fare un esercizio.</li>
+            <li><strong>Senza Mani:</strong> Una volta avviato, il microfono si riattiva da solo dopo ogni risposta.</li>
+        </ul>
+        <button id="start-btn" style="padding: 10px;" onclick="toggleModal(false)">Ho capito</button>
+    </div>
 </div>
 
 <script>
@@ -63,7 +211,7 @@
     recognition.continuous = true;
     recognition.interimResults = false;
 
-    let fraseDaRipetere = "";
+    let fraseTarget = "";
     let staRipetendo = false;
 
     function swapLangs() {
@@ -72,9 +220,15 @@
         const temp = s.value; s.value = t.value; t.value = temp;
     }
 
+    function toggleModal(show) {
+        document.getElementById('modal').style.display = show ? 'flex' : 'none';
+    }
+
     recognition.onstart = () => {
         document.getElementById('status').innerText = "🔴 ASCOLTO ATTIVO";
-        document.getElementById('start-btn').style.display = "none";
+        document.getElementById('status').style.color = "#10b981";
+        document.getElementById('start-btn').innerText = "MICROFONO APERTO";
+        document.getElementById('start-btn').style.background = "#10b981";
     };
 
     recognition.onresult = async (event) => {
@@ -87,85 +241,85 @@
 
         document.getElementById('txt-originale').innerText = input;
 
-        // 1. MODALITÀ ALLENAMENTO (Ripetizione)
+        // LOGICA ALLENAMENTO
         if (staRipetendo) {
-            const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-            const cleanTarget = fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-            
-            if (cleanIn.includes(cleanTarget) || cleanTarget.includes(cleanIn)) {
-                aggiornaUI("Corretto!", "Ottima pronuncia! Passiamo oltre.");
-                await parla("Ottimo lavoro!", "it-IT");
+            if (inputLower.includes(fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""))) {
+                updateUI("BRAVO!", "Pronuncia perfetta. Torniamo al dialogo.");
+                await parla("Eccellente!", "it-IT");
                 staRipetendo = false;
-                aggiornaModo("DIALOGO");
+                setMode("DIALOGO");
             } else {
-                await parla("Riprova: " + fraseDaRipetere, tFull);
+                await parla("Riprova: " + fraseTarget, tFull);
             }
             return;
         }
 
-        // 2. MODALITÀ INSEGNANTE (Trigger: "Spiegami")
+        // LOGICA INSEGNANTE (TRIGGER: "spiegami")
         if (inputLower.includes("spiegami")) {
-            aggiornaModo("INSEGNANTE");
-            const argomento = inputLower.replace("spiegami", "").trim();
+            setMode("LEZIONE");
+            const tema = inputLower.replace("spiegami", "").trim();
+            const spiegazione = `Ecco come funziona ${tema}. In questa lingua si costruisce così.`;
+            const esempio = await translate("Esempio pratico", sl, tl);
             
-            // Qui simuliamo la spiegazione (in un caso reale chiameresti un'API di testo)
-            const spiegazione = `Per "${argomento}", si usa questa forma. Ecco un esempio pratico.`;
-            const esempioIta = `Frase di esempio con ${argomento}`;
-            const esempioStraniero = await chiamaGT(esempioIta, sl, tl);
-
-            document.getElementById('txt-tutor').innerText = spiegazione;
-            document.getElementById('txt-tradotto').innerText = esempioStraniero;
-
+            updateUI(esempio, spiegazione);
             await parla(spiegazione, "it-IT");
-            await parla("Ripeti con me l'esempio: " + esempioStraniero, "it-IT");
-            await parla(esempioStraniero, tFull);
-
-            fraseDaRipetere = esempioStraniero;
+            await parla("Ripeti l'esempio: " + esempio, "it-IT");
+            await parla(esempio, tFull);
+            
+            fraseTarget = esempio;
             staRipetendo = true;
-            aggiornaModo("ALLENAMENTO");
+            setMode("ALLENAMENTO");
         } 
         
-        // 3. MODALITÀ DIALOGO (Default)
+        // LOGICA SUPPORTO (TRIGGER: "come si dice")
+        else if (inputLower.includes("come si dice")) {
+            setMode("SUPPORTO");
+            const q = inputLower.replace("come si dice", "").trim();
+            const trad = await translate(q, sl, tl);
+            updateUI(trad, "Ripeti per imparare");
+            await parla("Si dice: " + trad, tFull);
+            fraseTarget = trad;
+            staRipetendo = true;
+            setMode("ALLENAMENTO");
+        }
+
+        // DIALOGO STANDARD
         else {
-            aggiornaModo("DIALOGO");
-            const trad = await chiamaGT(input, sl, tl);
-            document.getElementById('txt-tradotto').innerText = trad;
-            document.getElementById('txt-tutor').innerText = "Traduzione rapida.";
+            setMode("DIALOGO");
+            const trad = await translate(input, sl, tl);
+            updateUI(trad, "Traduzione istantanea");
             await parla(trad, tFull);
         }
     };
 
-    async function chiamaGT(text, sl, tl) {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
-        const res = await fetch(url);
+    async function translate(text, sl, tl) {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`);
         const data = await res.json();
         return data[0][0][0];
     }
 
     function parla(testo, lang) {
-        return new Promise((resolve) => {
-            const ut = new SpeechSynthesisUtterance(testo);
-            ut.lang = lang;
-            ut.rate = 0.85;
-            ut.onend = resolve;
-            window.speechSynthesis.speak(ut);
+        return new Promise(res => {
+            const u = new SpeechSynthesisUtterance(testo);
+            u.lang = lang; u.rate = 0.9; u.onend = res;
+            window.speechSynthesis.speak(u);
         });
     }
 
-    function aggiornaUI(trad, tutor) {
-        document.getElementById('txt-tradotto').innerText = trad;
-        document.getElementById('txt-tutor').innerText = tutor;
+    function updateUI(tr, tut) {
+        document.getElementById('txt-tradotto').innerText = tr;
+        document.getElementById('txt-tutor').innerText = tut;
     }
 
-    function aggiornaModo(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
+    function setMode(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
 
     function inizia() {
         recognition.lang = document.getElementById('lang-source').value;
         recognition.start();
-        if ('wakeLock' in navigator) { navigator.wakeLock.request('screen'); }
+        if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
     }
 
-    recognition.onend = () => { recognition.start(); };
+    recognition.onend = () => recognition.start();
 </script>
 </body>
 </html>
