@@ -80,18 +80,19 @@
     <div class="display-box">
         <div class="label">Traduzione & Valutazione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Parla in Italiano per tradurre o ripeti la traduzione per la prova di pronuncia.</div>
+        <div id="txt-tutor">Parla per tradurre o ripeti la traduzione.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TRADUTTORE INTELLIGENTE</button>
+    <button id="start-btn" onclick="inizia()">ATTIVA TRADUTTORE DINAMICO</button>
 </div>
 
 <script>
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = true;
+    recognition.continuous = false; // Modificato per gestire meglio il cambio lingua
     recognition.interimResults = false;
     
     let ultimaTraduzione = "";
+    let ascoltandoStraniero = false;
 
     function swapLangs() {
         const s = document.getElementById('lang-source');
@@ -100,8 +101,10 @@
     }
 
     recognition.onstart = () => {
-        document.getElementById('status').innerText = "🔴 ASCOLTO ATTIVO";
-        document.getElementById('status').style.color = "#10b981";
+        const colore = ascoltandoStraniero ? "#3b82f6" : "#10b981";
+        const testo = ascoltandoStraniero ? "🔵 ASCOLTO PRONUNCIA" : "🔴 ASCOLTO ITALIANO";
+        document.getElementById('status').innerText = testo;
+        document.getElementById('status').style.color = colore;
     };
 
     recognition.onresult = async (event) => {
@@ -114,20 +117,27 @@
 
         document.getElementById('txt-originale').innerText = input;
 
-        // LOGICA INTELLIGENTE: Verifica se l'utente sta cercando di ripetere l'ultima traduzione
-        const targetPulito = ultimaTraduzione.toLowerCase().trim().replace(/[.,?!]/g, "");
-        
-        if (ultimaTraduzione && (inputLower === targetPulito || targetPulito.includes(inputLower) && inputLower.length > 2)) {
-            updateUI("BRAVO!", "Pronuncia corretta rilevata.");
-            await parla("Ottimo!", "it-IT");
-            ultimaTraduzione = ""; 
+        if (ascoltandoStraniero) {
+            const targetPulito = ultimaTraduzione.toLowerCase().trim().replace(/[.,?!]/g, "");
+            // Confronto tollerante per la lingua straniera
+            if (inputLower === targetPulito || targetPulito.includes(inputLower)) {
+                updateUI("BRAVO!", "Pronuncia perfetta.");
+                await parla("Ottimo lavoro!", "it-IT");
+            } else {
+                updateUI(ultimaTraduzione, "Pronuncia non perfetta, riprova in Italiano.");
+            }
+            ascoltandoStraniero = false;
             return;
         }
 
+        // TRADUZIONE
         const trad = await translate(input, sl, tl);
         ultimaTraduzione = trad;
-        updateUI(trad, "Prova a ripeterlo per verificare la pronuncia...");
+        updateUI(trad, "Prova a ripetere ora...");
         await parla(trad, tFull);
+        
+        // ATTIVA ASCOLTO STRANIERO PER IL PROSSIMO TURNO
+        ascoltandoStraniero = true;
     };
 
     async function translate(text, sl, tl) {
@@ -136,7 +146,7 @@
             const res = await fetch(url);
             const data = await res.json();
             return data[0].map(item => item[0]).join("");
-        } catch (e) { return "Errore di connessione."; }
+        } catch (e) { return "Errore."; }
     }
 
     function parla(testo, lang) {
@@ -154,15 +164,22 @@
     }
 
     function inizia() {
-        const sblocco = new SpeechSynthesisUtterance("Sistema attivo");
+        const sblocco = new SpeechSynthesisUtterance("Pronto");
         sblocco.lang = "it-IT";
         window.speechSynthesis.speak(sblocco);
-        recognition.lang = document.getElementById('lang-source').value;
-        try { recognition.start(); } catch(e) {}
+        avviaRiconoscimento();
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
     }
 
-    recognition.onend = () => recognition.start();
+    function avviaRiconoscimento() {
+        recognition.lang = ascoltandoStraniero ? document.getElementById('lang-target').value : document.getElementById('lang-source').value;
+        try { recognition.start(); } catch(e) {}
+    }
+
+    recognition.onend = () => {
+        // Se ha appena tradotto, riparte subito per ascoltare la pronuncia straniera
+        avviaRiconoscimento();
+    };
 </script>
 </body>
 </html>
