@@ -9,200 +9,98 @@
     <link rel="apple-touch-icon" href="icona.png">
     
     <style>
-        :root {
-            --primary: #4f46e5;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --accent: #10b981;
-        }
-
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: var(--bg); 
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container { 
-            width: 90%;
-            max-width: 400px; 
-            background: var(--card); 
-            padding: 25px; 
-            border-radius: 30px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-
-        #status { font-size: 11px; font-weight: 800; color: #ef4444; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
-        select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
-        .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
-
+        :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-sub: #64748b; --accent: #10b981; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 400px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; }
         .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
-        .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
-        #txt-originale { font-size: 16px; font-weight: 500; min-height: 22px; color: var(--text-main); }
-        
-        /* GRANDE E LEGGIBILE */
-        #txt-tradotto { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 8px; line-height: 1.2; }
-        #txt-originale-thai { font-size: 13px; color: var(--text-sub); margin-top: 6px; font-weight: 500; }
-        #txt-tutor { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
-
-        button#start-btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
+        .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; }
+        #txt-tradotto { font-size: 26px; font-weight: 800; color: var(--primary); margin: 8px 0; }
+        #txt-originale-thai { font-size: 14px; color: var(--text-sub); }
+        .btn { border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
+        #btn-main { background: var(--accent); color: white; margin-bottom: 10px; }
+        #btn-ripeti { background: var(--primary); color: white; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="status">SISTEMA PRONTO</div>
+    <div id="status" style="font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 15px;">PRONTO</div>
     
     <div class="controls">
-        <select id="lang-source">
-            <option value="it-IT" selected>🇮🇹 Italiano</option>
-            <option value="th-TH">🇹🇭 Thai</option>
-            <option value="en-US">🇺🇸 Inglese</option>
-        </select>
-        <button class="swap-btn" onclick="swapLangs()">⇄</button>
-        <select id="lang-target">
-            <option value="th-TH" selected>🇹🇭 Thai</option>
-            <option value="en-US">🇺🇸 Inglese</option>
-            <option value="it-IT">🇮🇹 Italiano</option>
-        </select>
+        <select id="lang-source"><option value="it-IT">🇮🇹 Italiano</option></select>
+        <select id="lang-target"><option value="th-TH">🇹🇭 Thai</option><option value="en-US">🇺🇸 Inglese</option></select>
     </div>
 
     <div class="display-box">
-        <div class="label">Ho recepito:</div>
-        <div id="txt-originale">...</div>
-    </div>
-
-    <div class="display-box">
-        <div class="label">Leggi questa scritta blu:</div>
+        <div class="label">Traduzione (Leggi qui)</div>
         <div id="txt-tradotto">...</div>
         <div id="txt-originale-thai">...</div>
-        <div id="txt-tutor">Clicca il tasto sotto per iniziare.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TRADUZIONE SEMPLICE</button>
+    <button id="btn-main" class="btn" onclick="ascoltaItaliano()">TRADUCI (PARLA ORA)</button>
+    <button id="btn-ripeti" class="btn" onclick="ascoltaStraniero()">PROVA PRONUNCIA</button>
 </div>
 
 <script>
-    let recognition = null;
-    let ultimaTraduzioneTesto = "";
-    let modoStraniero = false;
-    window.isStarted = false;
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    let ultimaTraduzione = "";
 
-    function swapLangs() {
-        const s = document.getElementById('lang-source');
-        const t = document.getElementById('lang-target');
-        const temp = s.value; s.value = t.value; t.value = temp;
+    function updateUI(main, sub, status, color) {
+        document.getElementById('txt-tradotto').innerText = main;
+        document.getElementById('txt-originale-thai').innerText = sub;
+        const st = document.getElementById('status');
+        st.innerText = status;
+        st.style.color = color;
     }
 
-    async function avviaMicrofono(lingua) {
-        if (recognition) {
-            recognition.onend = null;
-            recognition.stop();
-            await new Promise(r => setTimeout(r, 500));
-        }
-
-        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new Speech();
-        recognition.lang = lingua;
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-            const status = document.getElementById('status');
-            status.innerText = modoStraniero ? "🔵 ORA RIPETI (MODO THAI)" : "🔴 ASCOLTO (MODO ITALIANO)";
-            status.style.color = modoStraniero ? "#3b82f6" : "#10b981";
-        };
-
-        recognition.onresult = async (event) => {
-            const input = event.results[0][0].transcript;
-            document.getElementById('txt-originale').innerText = input;
-
-            if (modoStraniero) {
-                const inputLow = input.toLowerCase();
-                const targetLow = ultimaTraduzioneTesto.toLowerCase();
-                
-                if (inputLow.includes(targetLow) || targetLow.includes(inputLow) || inputLow.length > 2) {
-                    updateUI("BRAVO!", "", "Pronuncia corretta!");
-                    await parla("Ottimo!", "it-IT");
-                    modoStraniero = false;
-                    avviaMicrofono(document.getElementById('lang-source').value);
-                } else {
-                    updateUI("RIPROVA", ultimaTraduzioneTesto, "Riprova a leggere la fonetica blu.");
-                    await parla("No, riprova.", "it-IT");
-                }
-            } else {
-                const sl = document.getElementById('lang-source').value.split('-')[0];
-                const tl = document.getElementById('lang-target').value.split('-')[0];
-                const data = await getTranslation(input, sl, tl);
-                
-                ultimaTraduzioneTesto = data.text;
-                // Mostra fonetica in blu, caratteri Thai piccoli sotto
-                updateUI(data.phonetic, data.text, "Attendi il BLU in alto e ripeti.");
-                await parla(data.text, document.getElementById('lang-target').value);
-                
-                modoStraniero = true;
-                // Pausa forzata per switch lingua su iOS
-                setTimeout(() => avviaMicrofono(document.getElementById('lang-target').value), 1200);
-            }
-        };
-
-        recognition.onend = () => { 
-            if(window.isStarted) setTimeout(() => { try { recognition.start(); } catch(e){} }, 400); 
-        };
-        
-        try { recognition.start(); } catch(e) {}
-    }
-
-    async function getTranslation(text, sl, tl) {
-        try {
-            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(text)}`);
-            const data = await res.json();
-            let textOut = data[0][0][0];
-            let phonetic = "";
-
-            // Estrazione fonetica pulita
-            if (data[0][1] && data[0][1][3]) phonetic = data[0][1][3];
-            else if (data[5] && data[5][0] && data[5][0][2]) phonetic = data[5][0][2];
-            else if (data[0][0][3]) phonetic = data[0][0][3];
-            
-            // Se non c'è fonetica o siamo in inglese/italiano, usa il testo
-            if (!phonetic || tl === "en" || tl === "it") phonetic = textOut;
-
-            return { 
-                text: textOut, 
-                phonetic: phonetic.normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-            };
-        } catch (e) { return { text: "Errore", phonetic: "Errore" }; }
+    async function getTranslation(text, tl) {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=it&tl=${tl}&dt=t&dt=rm&q=${encodeURIComponent(text)}`);
+        const data = await res.json();
+        const phonetic = (data[0][1] && data[0][1][3]) ? data[0][1][3] : (data[0][0][3] || data[0][0][0]);
+        return { text: data[0][0][0], phonetic: phonetic.normalize("NFD").replace(/[\u0300-\u036f]/g, "") };
     }
 
     function parla(testo, lang) {
-        return new Promise(res => {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(testo);
-            u.lang = lang; u.rate = 0.75; u.onend = res;
-            window.speechSynthesis.speak(u);
-        });
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(testo);
+        u.lang = lang; u.rate = 0.8;
+        window.speechSynthesis.speak(u);
     }
 
-    function updateUI(main, sub, tutor) {
-        document.getElementById('txt-tradotto').innerText = main;
-        document.getElementById('txt-originale-thai').innerText = sub;
-        document.getElementById('txt-tutor').innerText = tutor;
-        document.getElementById('txt-tradotto').style.color = (main === "RIPROVA") ? "#ef4444" : "#4f46e5";
+    function ascoltaItaliano() {
+        recognition.lang = "it-IT";
+        recognition.onstart = () => updateUI("...", "...", "ASCOLTO ITALIANO...", "#10b981");
+        recognition.onresult = async (e) => {
+            const input = e.results[0][0].transcript;
+            const targetLang = document.getElementById('lang-target').value;
+            const data = await getTranslation(input, targetLang.split('-')[0]);
+            ultimaTraduzione = data.text;
+            updateUI(data.phonetic, data.text, "TRADOTTO", "#4f46e5");
+            parla(data.text, targetLang);
+            document.getElementById('btn-ripeti').style.display = "block";
+        };
+        recognition.start();
     }
 
-    function inizia() {
-        window.isStarted = true;
-        avviaMicrofono(document.getElementById('lang-source').value);
-        if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
+    function ascoltaStraniero() {
+        const targetLang = document.getElementById('lang-target').value;
+        recognition.lang = targetLang;
+        recognition.onstart = () => updateUI(document.getElementById('txt-tradotto').innerText, "...", "RIPETI ORA...", "#4f46e5");
+        recognition.onresult = (e) => {
+            const input = e.results[0][0].transcript.toLowerCase();
+            const target = ultimaTraduzione.toLowerCase();
+            if (input.includes(target) || target.includes(input)) {
+                updateUI("BRAVO!", "Pronuncia corretta", "ECCELLENTE", "#10b981");
+                parla("Ottimo!", "it-IT");
+                document.getElementById('btn-ripeti').style.display = "none";
+            } else {
+                updateUI("RIPROVA", "Ho sentito: " + input, "SBAGLIATO", "#ef4444");
+                parla("Riprova", "it-IT");
+            }
+        };
+        recognition.start();
     }
 </script>
 </body>
