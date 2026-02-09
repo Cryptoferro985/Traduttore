@@ -17,7 +17,6 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
             --accent: #10b981;
-            --warning: #f59e0b;
         }
 
         body { 
@@ -47,9 +46,11 @@
         select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
         .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
 
-        .mode-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
-        .mode-btn { flex: 1; padding: 8px; font-size: 10px; font-weight: 700; border-radius: 10px; border: 2px solid #e2e8f0; cursor: pointer; background: white; color: var(--text-sub); transition: 0.2s; }
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        .mode-btn { flex: 1; min-width: 100px; padding: 10px; font-size: 10px; font-weight: 700; border-radius: 12px; border: 2px solid #e2e8f0; cursor: pointer; background: white; color: var(--text-sub); transition: 0.2s; text-transform: uppercase; }
         .mode-btn.active { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
+
+        .mode-badge { display: inline-block; padding: 5px 15px; background: #eef2ff; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; }
 
         .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
@@ -83,10 +84,12 @@
     </div>
 
     <div class="mode-selector">
-        <button id="btn-traduzione_semplice" class="mode-btn active" onclick="setManualMode('TRADUZIONE_SEMPLICE')">TRADUZIONE SEMPLICE</button>
-        <button id="btn-esercitazione" class="mode-btn" onclick="setManualMode('ESERCITAZIONE')">ESERCITAZIONE</button>
-        <button id="btn-lezione" class="mode-btn" onclick="setManualMode('LEZIONE')">LEZIONE</button>
+        <button id="btn-traduzione_semplice" class="mode-btn active" onclick="setManualMode('TRADUZIONE_SEMPLICE')">Traduzione Semplice</button>
+        <button id="btn-esercitazione" class="mode-btn" onclick="setManualMode('ESERCITAZIONE')">Esercitazione</button>
+        <button id="btn-lezione" class="mode-btn" onclick="setManualMode('LEZIONE')">Lezione</button>
     </div>
+
+    <div id="current-mode" class="mode-badge">MODALITÀ: TRADUZIONE SEMPLICE</div>
     
     <div class="display-box">
         <div class="label">Input Rilevato</div>
@@ -96,7 +99,7 @@
     <div class="display-box">
         <div class="label">Tutor & Traduzione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Seleziona una modalità e parla</div>
+        <div id="txt-tutor">Seleziona una modalità e attiva il microfono</div>
     </div>
 
     <div class="btn-group">
@@ -122,9 +125,9 @@
     function setManualMode(m) {
         currentMode = m;
         staRipetendo = false;
-        // Aggiorna grafica tasti
         document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('btn-' + m.toLowerCase()).classList.add('active');
+        document.getElementById('current-mode').innerText = "MODALITÀ: " + m.replace('_', ' ');
         
         const info = {
             'TRADUZIONE_SEMPLICE': 'Traduzione istantanea libera.',
@@ -132,7 +135,6 @@
             'LEZIONE': 'Spiegherò la grammatica di ciò che dici.'
         };
         updateUI("...", info[m]);
-        setMode(m.replace('_', ' '));
     }
 
     recognition.onstart = () => {
@@ -179,7 +181,7 @@
             fraseTarget = trad; 
             staRipetendo = true;
         } 
-        else { // TRADUZIONE SEMPLICE
+        else { 
             const trad = await translate(input, sl, tl);
             updateUI(trad, "Traduzione istantanea");
             await parla(trad, tFull);
@@ -204,11 +206,6 @@
     function updateUI(tr, tut) {
         document.getElementById('txt-tradotto').innerText = tr;
         document.getElementById('txt-tutor').innerText = tut;
-    }
-
-    function setMode(m) { 
-        const badge = document.querySelector('.mode-badge');
-        if(badge) badge.innerText = "MODALITÀ: " + m; 
     }
 
     function inizia() {
