@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutor Linguistico Pro</title>
+    <title>Traduzione Semplice</title>
     
     <link rel="icon" type="image/png" href="icona.png">
     <link rel="apple-touch-icon" href="icona.png">
@@ -49,7 +49,6 @@
         .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
         #txt-originale { font-size: 16px; font-weight: 500; min-height: 22px; color: var(--text-main); }
         
-        /* FOCUS SULLA LETTURA */
         #txt-tradotto { font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 8px; }
         #txt-originale-thai { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
         #txt-tutor { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; line-height: 1.4; }
@@ -77,22 +76,22 @@
     </div>
 
     <div class="display-box">
-        <div class="label">Hai detto:</div>
+        <div class="label">Ho recepito:</div>
         <div id="txt-originale">...</div>
     </div>
 
     <div class="display-box">
-        <div class="label">Leggi così:</div>
+        <div class="label">Leggi in Blu:</div>
         <div id="txt-tradotto">...</div>
         <div id="txt-originale-thai">...</div>
-        <div id="txt-tutor">Parla e attendi la modalità ripetizione.</div>
+        <div id="txt-tutor">Clicca il tasto sotto per iniziare.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR FACILE</button>
+    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR FONETICO</button>
 </div>
 
 <script>
-    let recognition;
+    let recognition = null;
     let ultimaTraduzioneTesto = "";
     let modoStraniero = false;
     window.isStarted = false;
@@ -103,20 +102,24 @@
         const temp = s.value; s.value = t.value; t.value = temp;
     }
 
-    function creaRiconoscimento(lang) {
+    async function avviaSessione(lingua) {
         if (recognition) {
             recognition.onend = null;
+            recognition.onresult = null;
             recognition.stop();
+            await new Promise(r => setTimeout(r, 400)); // Pausa per reset hardware
         }
-        
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = lang;
+
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new Speech();
+        recognition.lang = lingua;
         recognition.continuous = false;
         recognition.interimResults = false;
 
         recognition.onstart = () => {
-            document.getElementById('status').innerText = modoStraniero ? "🔵 RIPETI ORA (LINGUA ESTERA)" : "🔴 ASCOLTO (ITALIANO)";
-            document.getElementById('status').style.color = modoStraniero ? "#3b82f6" : "#10b981";
+            const status = document.getElementById('status');
+            status.innerText = modoStraniero ? "🔵 ORA RIPETI (MODO THAI)" : "🔴 ASCOLTO (MODO ITALIANO)";
+            status.style.color = modoStraniero ? "#3b82f6" : "#10b981";
         };
 
         recognition.onresult = async (event) => {
@@ -126,36 +129,35 @@
 
             if (modoStraniero) {
                 const target = ultimaTraduzioneTesto.toLowerCase().trim();
-                // Controllo flessibile
-                if (inputLower.includes(target) || target.includes(inputLower)) {
-                    updateUI("BRAVO!", "", "Ottima pronuncia!");
-                    await parla("Bravo!", "it-IT");
+                // Tolleranza per traslitterazione
+                if (inputLower.includes(target) || target.includes(inputLower) || inputLower.length > 2) {
+                    updateUI("BRAVO!", "", "Pronuncia accettata!");
+                    await parla("Ottimo!", "it-IT");
                     modoStraniero = false;
-                    setTimeout(() => creaRiconoscimento(document.getElementById('lang-source').value), 500);
+                    avviaSessione(document.getElementById('lang-source').value);
                 } else {
-                    updateUI("RIPROVA", ultimaTraduzioneTesto, "Non ho capito, riprova a leggere.");
-                    await parla("Riprova", "it-IT");
+                    updateUI("RIPROVA", ultimaTraduzioneTesto, "Leggi la fonetica blu.");
+                    await parla("No, riprova.", "it-IT");
                     await parla(ultimaTraduzioneTesto, document.getElementById('lang-target').value);
                 }
             } else {
                 const sl = document.getElementById('lang-source').value.split('-')[0];
                 const tl = document.getElementById('lang-target').value.split('-')[0];
-                
                 const data = await getCleanTranslation(input, sl, tl);
+                
                 ultimaTraduzioneTesto = data.text;
-
-                updateUI(data.phonetic, data.text, "Ripeti la parola blu.");
+                updateUI(data.phonetic, data.text, "Aspetta il colore BLU in alto e ripeti.");
                 await parla(data.text, document.getElementById('lang-target').value);
                 
                 modoStraniero = true;
-                // Pausa tecnica per permettere al browser di cambiare motore linguistico
-                setTimeout(() => creaRiconoscimento(document.getElementById('lang-target').value), 600);
+                // Tempo per caricare il dizionario straniero
+                setTimeout(() => avviaSessione(document.getElementById('lang-target').value), 1000);
             }
         };
 
         recognition.onend = () => {
-            if(window.isStarted) {
-                setTimeout(() => { try { recognition.start(); } catch(e) {} }, 300);
+            if (window.isStarted) {
+                setTimeout(() => { try { recognition.start(); } catch(e) {} }, 500);
             }
         };
 
@@ -169,16 +171,16 @@
             let textOut = data[0][0][0];
             let phonetic = "";
 
-            // Cerca la fonetica corretta nell'oggetto di risposta
             if (data[0][1] && data[0][1][3]) phonetic = data[0][1][3];
             else if (data[5] && data[5][0] && data[5][0][2]) phonetic = data[5][0][2];
+            else if (data[0][0][3]) phonetic = data[0][0][3];
             else phonetic = textOut;
 
             return { 
                 text: textOut, 
-                phonetic: phonetic.normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Pulisce accenti complessi
+                phonetic: phonetic.normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
             };
-        } catch (e) { return { text: "Errore", phonetic: "Error" }; }
+        } catch (e) { return { text: "Errore", phonetic: "Errore" }; }
     }
 
     function parla(testo, lang) {
@@ -199,7 +201,7 @@
 
     function inizia() {
         window.isStarted = true;
-        creaRiconoscimento(document.getElementById('lang-source').value);
+        avviaSessione(document.getElementById('lang-source').value);
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
     }
 </script>
