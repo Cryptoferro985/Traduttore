@@ -3,55 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutor Linguistico</title>
-    <link rel="apple-touch-icon" href="icona.PNG">
+    <title>Tutor Linguistico Pro</title>
+    
+    <link rel="icon" type="image/png" href="icona.PNG?v=2">
+    <link rel="apple-touch-icon" href="icona.PNG?v=2">
+    
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
-        button { background: #3b82f6; color: white; border: none; padding: 15px 30px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
-        .status { color: #ef4444; font-weight: bold; text-transform: uppercase; font-size: 12px; margin-bottom: 20px; }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --accent: #10b981;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container { 
+            width: 90%;
+            max-width: 400px; 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 30px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        #status { font-size: 11px; font-weight: 800; color: #ef4444; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
+        .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
+
+        .mode-badge { display: inline-block; padding: 5px 15px; background: #eef2ff; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 15px; }
+
+        .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
+        .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; }
+        #txt-originale { font-size: 16px; font-weight: 500; min-height: 22px; color: var(--text-main); }
+        #txt-tradotto { font-size: 20px; font-weight: 700; color: var(--accent); margin-top: 8px; }
+        #txt-tutor { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; line-height: 1.4; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        button#start-btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        button#info-btn { background: transparent; border: 1px solid #e2e8f0; padding: 12px; border-radius: 16px; color: var(--text-sub); font-size: 13px; cursor: pointer; }
+        
+        button:active { transform: scale(0.97); }
+
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div id="status" class="status">Sistema Pronto</div>
-    <button onclick="testAudio()">TEST AUDIO (Premi qui)</button>
-    <button id="start-btn" onclick="inizia()" style="background: #10b981;">ATTIVA TUTOR VOCALE</button>
+<div class="container">
+    <div id="status">SISTEMA PRONTO</div>
+    
+    <div class="controls">
+        <select id="lang-source">
+            <option value="it-IT" selected>🇮🇹 Italiano</option>
+            <option value="th-TH">🇹🇭 Thai</option>
+            <option value="en-US">🇺🇸 Inglese</option>
+        </select>
+        <button class="swap-btn" onclick="swapLangs()">⇄</button>
+        <select id="lang-target">
+            <option value="th-TH" selected>🇹🇭 Thai</option>
+            <option value="en-US">🇺🇸 Inglese</option>
+            <option value="it-IT">🇮🇹 Italiano</option>
+        </select>
+    </div>
+
+    <div id="current-mode" class="mode-badge">MODALITÀ: DIALOGO</div>
+    
+    <div class="display-box">
+        <div class="label">Input Rilevato</div>
+        <div id="txt-originale">In attesa...</div>
+    </div>
+
+    <div class="display-box">
+        <div class="label">Tutor & Traduzione</div>
+        <div id="txt-tradotto">...</div>
+        <div id="txt-tutor">Dì "Spiegami..." o "Come si dice..."</div>
+    </div>
+
+    <div class="btn-group">
+        <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
+        <button id="info-btn" onclick="toggleModal(true)">COME FUNZIONA?</button>
+    </div>
+</div>
+
+<div id="modal" onclick="toggleModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="margin-top:0; color:var(--primary)">Guida Rapida</h3>
+        <ul style="font-size:14px; padding-left:20px">
+            <li><strong>"Come si dice...":</strong> Traduce e ti fa ripetere.</li>
+            <li><strong>"Spiegami...":</strong> Spiegazione grammaticale.</li>
+            <li><strong>Dialogo:</strong> Traduzione continua automatica. [cite: 2026-02-02]</li>
+        </ul>
+        <button onclick="toggleModal(false)" style="width:100%; padding:12px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:bold;">Ho capito</button>
+    </div>
 </div>
 
 <script>
-    const synth = window.speechSynthesis;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    let fraseTarget = "";
+    let staRipetendo = false;
 
-    // FUNZIONE TEST IMMEDIATO
-    function testAudio() {
-        const msg = new SpeechSynthesisUtterance("Audio verificato. Il sistema funziona.");
-        msg.lang = "it-IT";
-        synth.speak(msg);
-        document.getElementById('status').innerText = "AUDIO OK - PROVA ORA IL TUTOR";
+    function swapLangs() {
+        const s = document.getElementById('lang-source');
+        const t = document.getElementById('lang-target');
+        const temp = s.value; s.value = t.value; t.value = temp;
+    }
+
+    function toggleModal(show) { document.getElementById('modal').style.display = show ? 'flex' : 'none'; }
+
+    recognition.onstart = () => {
+        document.getElementById('status').innerText = "🔴 ASCOLTO ATTIVO";
         document.getElementById('status').style.color = "#10b981";
+    };
+
+    recognition.onresult = async (event) => {
+        const input = event.results[event.results.length - 1][0].transcript;
+        const inputLower = input.toLowerCase().trim();
+        const sFull = document.getElementById('lang-source').value;
+        const tFull = document.getElementById('lang-target').value;
+        const sl = sFull.split('-')[0];
+        const tl = tFull.split('-')[0];
+
+        document.getElementById('txt-originale').innerText = input;
+
+        if (staRipetendo) {
+            const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            const cleanTarget = fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            if (cleanIn.includes(cleanTarget) || cleanTarget.includes(cleanIn)) {
+                updateUI("BRAVO!", "Pronuncia perfetta.");
+                await parla("Ottimo!", "it-IT");
+                staRipetendo = false;
+                setMode("DIALOGO");
+            } else {
+                await parla("Riprova: " + fraseTarget, tFull);
+            }
+            return;
+        }
+
+        if (inputLower.includes("spiegami")) {
+            setMode("LEZIONE");
+            const tema = inputLower.replace("spiegami", "").trim();
+            const spiegazione = `Per "${tema}" si usa questa forma. Ripeti l'esempio.`;
+            const esempioTrad = await translate("Esempio di " + tema, sl, tl);
+            updateUI(esempioTrad, spiegazione);
+            await parla(spiegazione, "it-IT");
+            await parla(esempioTrad, tFull);
+            fraseTarget = esempioTrad; staRipetendo = true;
+        } 
+        else if (inputLower.includes("come si dice")) {
+            setMode("SUPPORTO");
+            const q = inputLower.replace("come si dice", "").trim();
+            const trad = await translate(q, sl, tl);
+            updateUI(trad, "Ripeti per imparare.");
+            await parla("Si dice: " + trad, tFull);
+            fraseTarget = trad; staRipetendo = true;
+        } else {
+            setMode("DIALOGO");
+            const trad = await translate(input, sl, tl);
+            updateUI(trad, "Traduzione istantanea");
+            await parla(trad, tFull);
+        }
+    };
+
+    async function translate(text, sl, tl) {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`);
+        const data = await res.json();
+        return data[0][0][0];
     }
 
     function parla(testo, lang) {
-        const u = new SpeechSynthesisUtterance(testo);
-        u.lang = lang;
-        u.rate = 0.9;
-        synth.speak(u);
+        return new Promise(res => {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(testo);
+            u.lang = lang; 
+            u.rate = 0.85; 
+            u.volume = 1.0; 
+            u.onend = res;
+            window.speechSynthesis.speak(u);
+        });
     }
 
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = true;
-    
-    recognition.onresult = async (event) => {
-        const input = event.results[event.results.length - 1][0].transcript;
-        parla("Hai detto: " + input, "it-IT");
-    };
+    function updateUI(tr, tut) {
+        document.getElementById('txt-tradotto').innerText = tr;
+        document.getElementById('txt-tutor').innerText = tut;
+    }
+
+    function setMode(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
 
     function inizia() {
-        testAudio(); // Sblocca l'audio
-        recognition.start();
-        document.getElementById('status').innerText = "ASCOLTO ATTIVO";
+        // SBLOCCO AUDIO FORZATO
+        const sblocco = new SpeechSynthesisUtterance("Audio attivo");
+        sblocco.lang = "it-IT";
+        window.speechSynthesis.speak(sblocco);
+
+        recognition.lang = document.getElementById('lang-source').value;
+        try { recognition.start(); } catch(e) {}
+        if ('wakeLock' in navigator) navigator.wakeLock.request('screen');
     }
+
+    recognition.onend = () => recognition.start();
 </script>
 </body>
 </html>
