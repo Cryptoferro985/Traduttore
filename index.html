@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insegnante di Lingua Hands-Free</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        #status { font-weight: bold; color: #d93025; margin-bottom: 15px; font-size: 14px; letter-spacing: 1px; }
+        .display-box { min-height: 80px; border: 1px solid #e4e6eb; border-radius: 12px; margin: 15px 0; padding: 15px; text-align: left; background: #f7f8fa; }
+        .label { font-size: 11px; color: #65676b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        #txt-originale { color: #1a73e8; font-size: 18px; }
+        #txt-tradotto { color: #188038; font-size: 20px; font-weight: bold; margin-top: 5px; }
+        #txt-spiegazione { color: #65676b; font-size: 14px; font-style: italic; margin-top: 8px; border-top: 1px solid #eee; pt: 5px; }
+        button { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s; }
+        button:active { background: #1558b0; }
+        .mode-indicator { font-size: 12px; background: #e7f3ff; color: #1877f2; padding: 6px 12px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="status">SISTEMA PRONTO</div>
+    <div id="current-mode" class="mode-indicator">MODALITÀ: DIALOGO</div>
+    
+    <div class="display-box">
+        <div class="label">Tu hai detto:</div>
+        <div id="txt-originale">In attesa della tua voce...</div>
+    </div>
+
+    <div class="display-box">
+        <div class="label">Risposta Insegnante (Google Translate):</div>
+        <div id="txt-tradotto">...</div>
+        <div id="txt-spiegazione"></div>
+    </div>
+
+    <button id="start-btn" onclick="inizia()">ATTIVA ASCOLTO CONTINUO</button>
+</div>
+
+<script>
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'it-IT';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    // --- CONFIGURAZIONE ---
+    let targetLang = 'en'; // 'en' per Inglese, 'es' per Spagnolo, 'de' per Tedesco
+    let fraseDaRipetere = "";
+    let staRipetendo = false;
+
+    recognition.onstart = () => {
+        document.getElementById('status').innerText = "🔴 IN ASCOLTO SENZA MANI";
+        document.getElementById('status').style.color = "#d93025";
+        document.getElementById('start-btn').style.display = "none";
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Errore riconoscimento:", event.error);
+        if(event.error === 'not-allowed') alert("Devi autorizzare il microfono!");
+    };
+
+    recognition.onresult = async (event) => {
+        const input = event.results[event.results.length - 1][0].transcript;
+        const inputLower = input.toLowerCase().trim();
+        document.getElementById('txt-originale').innerText = input;
+
+        // --- MODALITÀ A: CONTROLLO PRONUNCIA ---
+        if (staRipetendo) {
+            // Se quello che dici corrisponde alla frase target (anche parzialmente)
+            if (inputLower.includes(fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""))) {
+                aggiornaInterfaccia("Ottimo! La tua pronuncia è corretta.", "Successo!");
+                await parla("Ottima pronuncia! Molto bene.", "it-IT");
+                staRipetendo = false;
+                aggiornaModo("DIALOGO");
+            } else {
+                aggiornaInterfaccia(fraseDaRipetere, "Riprova, ti ascolto...");
+                await parla("Quasi. Prova a ripetere: " + fraseDaRipetere, targetLang);
+            }
+            return;
+        }
+
+        // --- MODALITÀ C: SUPPORTO (Richiesta traduzione) ---
+        if (inputLower.includes("come si dice")) {
+            aggiornaModo("SUPPORTO");
+            const fraseIta = inputLower.replace("come si dice", "").trim();
+            const trad = await chiamaGoogleTranslate(fraseIta, 'it', targetLang);
+            
+            aggiornaInterfaccia(trad, "In italiano: " + fraseIta);
+            
+            await parla("Si dice: " + trad, targetLang);
+            await parla("Adesso prova a dirlo tu.", "it-IT");
+            
+            fraseDaRipetere = trad;
+            staRipetendo = true;
+            aggiornaModo("ALLENAMENTO");
+        } 
+        
+        // --- MODALITÀ B: DIALOGO (Default) ---
+        else {
+            aggiornaModo("DIALOGO");
+            // 1. Traduciamo quello che hai detto nella lingua straniera
+            const tradEstera = await chiamaGoogleTranslate(input, 'it', targetLang);
+            
+            // 2. Mostriamo e parliamo
+            aggiornaInterfaccia(tradEstera, "Traduzione letterale Google");
+            await parla(tradEstera, targetLang);
+            
+            // 3. Piccola spiegazione di conferma in Italiano
+            setTimeout(async () => {
+                await parla("Hai detto: " + input, "it-IT");
+            }, 500);
+        }
+    };
+
+    // Funzione cuore: Chiamata a Google Translate API (GTX)
+    async function chiamaGoogleTranslate(text, sl, tl) {
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data[0][0][0];
+        } catch (e) {
+            return "Errore di connessione a Google Translate.";
+        }
+    }
+
+    // Funzione per la sintesi vocale (parlata)
+    function parla(testo, lang) {
+        return new Promise((resolve) => {
+            const ut = new SpeechSynthesisUtterance(testo);
+            ut.lang = lang;
+            ut.rate = 0.9; // Leggermente più lento per capire meglio
+            ut.onend = resolve;
+            window.speechSynthesis.speak(ut);
+        });
+    }
+
+    function aggiornaInterfaccia(tradotto, spiegazione) {
+        document.getElementById('txt-tradotto').innerText = tradotto;
+        document.getElementById('txt-spiegazione').innerText = spiegazione;
+    }
+
+    function aggiornaModo(modo) {
+        document.getElementById('current-mode').innerText = "MODALITÀ: " + modo;
+    }
+
+    function inizia() {
+        // Avvia il microfono
+        recognition.start();
+        
+        // Impedisce al telefono di spegnere lo schermo
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch((err) => console.log(err));
+        }
+    }
+
+    // Gestione riavvio automatico se il microfono si stacca
+    recognition.onend = () => {
+        recognition.start();
+    };
+</script>
+
+</body>
+</html>
