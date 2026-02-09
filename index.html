@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tutor Linguistico Pro</title>
+    
+    <link rel="icon" type="image/png" href="icona.png">
+    <link rel="apple-touch-icon" href="icona.png">
+    
     <style>
         :root {
             --primary: #4f46e5;
@@ -16,7 +20,7 @@
         }
 
         body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--bg); 
             color: var(--text-main);
             margin: 0;
@@ -27,132 +31,41 @@
         }
 
         .container { 
-            width: 100%;
-            max-width: 420px; 
+            width: 90%;
+            max-width: 400px; 
             background: var(--card); 
-            padding: 30px; 
+            padding: 25px; 
             border-radius: 30px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            margin: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center;
         }
 
-        #status { 
-            font-size: 12px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-            color: #ef4444;
-            margin-bottom: 20px;
-        }
+        #status { font-size: 11px; font-weight: 800; color: #ef4444; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
 
-        .controls { 
-            display: flex; 
-            gap: 12px; 
-            align-items: center; 
-            margin-bottom: 25px; 
-        }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
+        .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
 
-        select { 
-            flex: 1;
-            padding: 12px; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0; 
-            background: #fff; 
-            font-size: 15px;
-            color: var(--text-main);
-            outline: none;
-        }
+        .mode-badge { display: inline-block; padding: 5px 15px; background: #eef2ff; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 15px; }
 
-        .swap-btn { 
-            background: #f1f5f9; 
-            border: none; 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 10px; 
-            cursor: pointer;
-            font-size: 18px;
-        }
+        .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
+        .label { font-size: 10px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        #txt-originale { font-size: 16px; font-weight: 500; min-height: 22px; color: var(--text-main); }
+        #txt-tradotto { font-size: 20px; font-weight: 700; color: var(--accent); margin-top: 8px; }
+        #txt-tutor { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; line-height: 1.4; }
 
-        .mode-badge { 
-            display: inline-block;
-            padding: 6px 16px;
-            background: #eef2ff;
-            color: var(--primary);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        button#start-btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        button#info-btn { background: transparent; border: 1px solid #e2e8f0; padding: 12px; border-radius: 16px; color: var(--text-sub); font-size: 13px; cursor: pointer; }
+        
+        button:active { transform: scale(0.97); }
 
-        .display-box { 
-            text-align: left;
-            background: #f1f5f9;
-            padding: 20px;
-            border-radius: 18px;
-            margin-bottom: 15px;
-        }
-
-        .label { 
-            font-size: 11px; 
-            font-weight: 800; 
-            color: var(--text-sub); 
-            text-transform: uppercase; 
-            margin-bottom: 8px; 
-        }
-
-        #txt-originale { font-size: 18px; font-weight: 500; min-height: 24px; }
-        #txt-tradotto { font-size: 22px; font-weight: 700; color: var(--accent); margin-top: 10px; }
-        #txt-tutor { 
-            font-size: 14px; 
-            color: var(--text-sub); 
-            margin-top: 12px; 
-            padding-top: 12px; 
-            border-top: 1px solid #e2e8f0; 
-            line-height: 1.5;
-        }
-
-        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
-
-        button#start-btn { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 18px; 
-            border-radius: 16px; 
-            font-size: 16px; 
-            font-weight: 700; 
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        button#info-btn { 
-            background: transparent; 
-            color: var(--text-sub); 
-            border: 1px solid #e2e8f0; 
-            padding: 12px; 
-            border-radius: 16px; 
-            font-size: 14px; 
-            cursor: pointer;
-        }
-
-        button:active { transform: scale(0.98); }
-
-        /* Guida Modale */
-        #modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center; align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 25px;
-            max-width: 85%; text-align: left;
-        }
-        .modal-content h3 { margin-top: 0; color: var(--primary); }
-        .modal-content ul { padding-left: 20px; font-size: 14px; color: var(--text-sub); }
-        .modal-content li { margin-bottom: 10px; }
+        /* Modal Guida */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-top: 0; color: var(--primary); font-size: 20px; }
+        .modal-content ul { padding-left: 20px; font-size: 14px; color: var(--text-main); line-height: 1.6; }
+        .modal-content li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -162,14 +75,16 @@
     
     <div class="controls">
         <select id="lang-source">
-            <option value="it-IT">🇮🇹 Italiano</option>
+            <option value="it-IT" selected>🇮🇹 Italiano</option>
             <option value="th-TH">🇹🇭 Thai</option>
             <option value="en-US">🇺🇸 Inglese</option>
+            <option value="es-ES">🇪🇸 Spagnolo</option>
         </select>
         <button class="swap-btn" onclick="swapLangs()">⇄</button>
         <select id="lang-target">
-            <option value="th-TH">🇹🇭 Thai</option>
-            <option value="en-US" selected>🇺🇸 Inglese</option>
+            <option value="th-TH" selected>🇹🇭 Thai</option>
+            <option value="en-US">🇺🇸 Inglese</option>
+            <option value="es-ES">🇪🇸 Spagnolo</option>
             <option value="it-IT">🇮🇹 Italiano</option>
         </select>
     </div>
@@ -177,14 +92,14 @@
     <div id="current-mode" class="mode-badge">MODALITÀ: DIALOGO</div>
     
     <div class="display-box">
-        <div class="label">Input Rilevato</div>
-        <div id="txt-originale">...</div>
+        <div class="label">Tu hai detto</div>
+        <div id="txt-originale">In attesa della voce...</div>
     </div>
 
     <div class="display-box">
         <div class="label">Tutor & Traduzione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Pronto ad aiutarti.</div>
+        <div id="txt-tutor">Dì "Spiegami..." o "Come si dice..."</div>
     </div>
 
     <div class="btn-group">
@@ -195,14 +110,14 @@
 
 <div id="modal" onclick="toggleModal(false)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>Guida Funzioni</h3>
+        <h3>Guida Rapida</h3>
         <ul>
-            <li><strong>Dialogo Libero:</strong> Parla normalmente, il sistema traduce e legge ad alta voce.</li>
-            <li><strong>Supporto Pronuncia:</strong> Dì <em>"Come si dice..."</em>. Il bot traduce e ti sfida a ripetere finché la pronuncia non è corretta.</li>
-            <li><strong>Lezione Grammatica:</strong> Dì <em>"Spiegami..."</em> (es. "Spiegami il passato"). Il bot spiega la regola e ti fa fare un esercizio.</li>
-            <li><strong>Senza Mani:</strong> Una volta avviato, il microfono si riattiva da solo dopo ogni risposta.</li>
+            <li><strong>Dialogo Libero:</strong> Parla e il bot traduce istantaneamente.</li>
+            <li><strong>"Come si dice...":</strong> Traduce e ti sfida a ripetere finché la pronuncia è OK.</li>
+            <li><strong>"Spiegami...":</strong> Ti spiega una regola grammaticale con un esempio.</li>
+            <li><strong>Hands-Free:</strong> Una volta avviato, resta sempre in ascolto.</li>
         </ul>
-        <button id="start-btn" style="padding: 10px;" onclick="toggleModal(false)">Ho capito</button>
+        <button onclick="toggleModal(false)" style="width:100%; padding:12px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:bold; margin-top:10px;">Ho capito</button>
     </div>
 </div>
 
@@ -241,11 +156,14 @@
 
         document.getElementById('txt-originale').innerText = input;
 
-        // LOGICA ALLENAMENTO
+        // 1. MODALITÀ ALLENAMENTO
         if (staRipetendo) {
-            if (inputLower.includes(fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""))) {
-                updateUI("BRAVO!", "Pronuncia perfetta. Torniamo al dialogo.");
-                await parla("Eccellente!", "it-IT");
+            const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            const cleanTarget = fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            
+            if (cleanIn.includes(cleanTarget) || cleanTarget.includes(cleanIn)) {
+                updateUI("BRAVO!", "Pronuncia verificata correttamente.");
+                await parla("Ottimo!", "it-IT");
                 staRipetendo = false;
                 setMode("DIALOGO");
             } else {
@@ -254,36 +172,37 @@
             return;
         }
 
-        // LOGICA INSEGNANTE (TRIGGER: "spiegami")
+        // 2. MODALITÀ INSEGNANTE
         if (inputLower.includes("spiegami")) {
             setMode("LEZIONE");
             const tema = inputLower.replace("spiegami", "").trim();
-            const spiegazione = `Ecco come funziona ${tema}. In questa lingua si costruisce così.`;
-            const esempio = await translate("Esempio pratico", sl, tl);
-            
-            updateUI(esempio, spiegazione);
+            const spiegazione = `Per "${tema}" si usa questa forma. Ecco un esempio pratico.`;
+            const esempioIta = `Frase di esempio con ${tema}`;
+            const esempioTrad = await translate(esempioIta, sl, tl);
+
+            updateUI(esempioTrad, spiegazione);
             await parla(spiegazione, "it-IT");
-            await parla("Ripeti l'esempio: " + esempio, "it-IT");
-            await parla(esempio, tFull);
+            await parla("Ripeti: " + esempioTrad, "it-IT");
+            await parla(esempioTrad, tFull);
             
-            fraseTarget = esempio;
+            fraseTarget = esempioTrad;
             staRipetendo = true;
             setMode("ALLENAMENTO");
         } 
         
-        // LOGICA SUPPORTO (TRIGGER: "come si dice")
+        // 3. MODALITÀ SUPPORTO
         else if (inputLower.includes("come si dice")) {
             setMode("SUPPORTO");
             const q = inputLower.replace("come si dice", "").trim();
             const trad = await translate(q, sl, tl);
-            updateUI(trad, "Ripeti per imparare");
+            updateUI(trad, "Prova a ripetere ora.");
             await parla("Si dice: " + trad, tFull);
             fraseTarget = trad;
             staRipetendo = true;
             setMode("ALLENAMENTO");
         }
 
-        // DIALOGO STANDARD
+        // 4. DIALOGO STANDARD
         else {
             setMode("DIALOGO");
             const trad = await translate(input, sl, tl);
@@ -293,15 +212,17 @@
     };
 
     async function translate(text, sl, tl) {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`);
-        const data = await res.json();
-        return data[0][0][0];
+        try {
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`);
+            const data = await res.json();
+            return data[0][0][0];
+        } catch (e) { return "Errore di rete."; }
     }
 
     function parla(testo, lang) {
         return new Promise(res => {
             const u = new SpeechSynthesisUtterance(testo);
-            u.lang = lang; u.rate = 0.9; u.onend = res;
+            u.lang = lang; u.rate = 0.85; u.onend = res;
             window.speechSynthesis.speak(u);
         });
     }
