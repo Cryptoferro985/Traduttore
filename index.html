@@ -9,17 +9,17 @@
         .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         #status { font-weight: bold; color: #d93025; margin-bottom: 15px; font-size: 14px; letter-spacing: 1px; }
         
-        /* Nuova sezione selettori */
         .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; background: #fff; flex: 1; font-size: 14px; }
-        .swap-btn { background: #eee; color: #333; padding: 10px; width: auto; font-size: 14px; border-radius: 8px; }
+        select { padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff; flex: 1; font-size: 14px; appearance: none; }
+        .swap-btn { background: #f0f2f5; color: #1a73e8; border: none; padding: 10px; width: auto; font-size: 18px; border-radius: 10px; cursor: pointer; }
 
         .display-box { min-height: 80px; border: 1px solid #e4e6eb; border-radius: 12px; margin: 15px 0; padding: 15px; text-align: left; background: #f7f8fa; }
         .label { font-size: 11px; color: #65676b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         #txt-originale { color: #1a73e8; font-size: 18px; }
         #txt-tradotto { color: #188038; font-size: 20px; font-weight: bold; margin-top: 5px; }
         #txt-spiegazione { color: #65676b; font-size: 14px; font-style: italic; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px; }
-        button { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
+        
+        button#start-btn { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
         .mode-indicator { font-size: 12px; background: #e7f3ff; color: #1877f2; padding: 6px 12px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
@@ -35,14 +35,16 @@
             <option value="es-ES">🇪🇸 Spagnolo</option>
             <option value="fr-FR">🇫🇷 Francese</option>
             <option value="de-DE">🇩🇪 Tedesco</option>
+            <option value="th-TH">🇹🇭 Thailandese</option>
         </select>
         <button class="swap-btn" onclick="swapLangs()">⇄</button>
         <select id="lang-target">
-            <option value="en-US" selected>🇺🇸 Inglese</option>
+            <option value="en-US">🇺🇸 Inglese</option>
             <option value="it-IT">🇮🇹 Italiano</option>
-            <option value="es-ES">🇪🇸 Spagnolo</option>
+            <option value="es-ES" selected>🇪🇸 Spagnolo</option>
             <option value="fr-FR">🇫🇷 Francese</option>
             <option value="de-DE">🇩🇪 Tedesco</option>
+            <option value="th-TH">🇹🇭 Thailandese</option>
         </select>
     </div>
 
@@ -50,11 +52,11 @@
     
     <div class="display-box">
         <div class="label">Tu hai detto:</div>
-        <div id="txt-originale">In attesa...</div>
+        <div id="txt-originale">In attesa della voce...</div>
     </div>
 
     <div class="display-box">
-        <div class="label">Risposta Google Translate:</div>
+        <div class="label">Google Translate:</div>
         <div id="txt-tradotto">...</div>
         <div id="txt-spiegazione"></div>
     </div>
@@ -90,52 +92,68 @@
         const sourceLangFull = document.getElementById('lang-source').value;
         const targetLangFull = document.getElementById('lang-target').value;
         
-        // Estraiamo solo il codice lingua (es. 'it' da 'it-IT')
         const sl = sourceLangFull.split('-')[0];
         const tl = targetLangFull.split('-')[0];
 
         document.getElementById('txt-originale').innerText = input;
 
+        // MODALITÀ A: CONTROLLO PRONUNCIA
         if (staRipetendo) {
-            if (inputLower.includes(fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""))) {
-                aggiornaInterfaccia("Ottimo! Corretto.", "Pronuncia verificata");
-                await parla("Ottimo! Molto bene.", sourceLangFull);
+            const pulitoInput = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            const pulitoTarget = fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+
+            if (pulitoInput.includes(pulitoTarget) || pulitoTarget.includes(pulitoInput)) {
+                aggiornaInterfaccia("Corretto!", "Pronuncia verificata");
+                await parla("Ottimo! Hai pronunciato bene.", "it-IT");
                 staRipetendo = false;
                 aggiornaModo("DIALOGO");
             } else {
-                await parla("Riprova: " + fraseDaRipetere, targetLangFull);
+                aggiornaInterfaccia(fraseDaRipetere, "Riprova ancora...");
+                await parla("Non proprio. Ripeti: " + fraseDaRipetere, targetLangFull);
             }
             return;
         }
 
+        // MODALITÀ C: SUPPORTO
         if (inputLower.includes("come si dice")) {
             aggiornaModo("SUPPORTO");
             const fraseIta = inputLower.replace("come si dice", "").trim();
             const trad = await chiamaGoogleTranslate(fraseIta, sl, tl);
-            aggiornaInterfaccia(trad, "Traduzione richiesta");
+            aggiornaInterfaccia(trad, "Ripeti questa frase");
             await parla("Si dice: " + trad, targetLangFull);
             fraseDaRipetere = trad;
             staRipetendo = true;
             aggiornaModo("ALLENAMENTO");
-        } else {
+        } 
+        
+        // MODALITÀ B: DIALOGO
+        else {
             aggiornaModo("DIALOGO");
-            const tradEstera = await chiamaGoogleTranslate(input, sl, tl);
-            aggiornaInterfaccia(tradEstera, "Traduzione automatica");
-            await parla(tradEstera, targetLangFull);
+            const trad = await chiamaGoogleTranslate(input, sl, tl);
+            aggiornaInterfaccia(trad, "Traduzione automatica");
+            await parla(trad, targetLangFull);
+            
+            // Conferma vocale opzionale in italiano per capire cosa è successo
+            setTimeout(async () => {
+                await parla("Hai detto: " + input, "it-IT");
+            }, 800);
         }
     };
 
     async function chiamaGoogleTranslate(text, sl, tl) {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        return data[0][0][0];
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data[0][0][0];
+        } catch (e) { return "Errore di connessione."; }
     }
 
     function parla(testo, lang) {
         return new Promise((resolve) => {
             const ut = new SpeechSynthesisUtterance(testo);
             ut.lang = lang;
+            ut.rate = 0.85; // Velocità leggermente ridotta per scopi didattici
             ut.onend = resolve;
             window.speechSynthesis.speak(ut);
         });
