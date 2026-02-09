@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Insegnante di Lingua Hands-Free</title>
+    <title>Tutor Linguistico Hands-Free</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #1c1e21; }
         .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        #status { font-weight: bold; color: #d93025; margin-bottom: 15px; font-size: 14px; letter-spacing: 1px; }
+        #status { font-weight: bold; color: #d93025; margin-bottom: 15px; font-size: 13px; letter-spacing: 1px; }
         
         .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
-        select { padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff; flex: 1; font-size: 14px; appearance: none; }
-        .swap-btn { background: #f0f2f5; color: #1a73e8; border: none; padding: 10px; width: auto; font-size: 18px; border-radius: 10px; cursor: pointer; }
+        select { padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff; flex: 1; font-size: 14px; }
+        .swap-btn { background: #f0f2f5; color: #1a73e8; border: none; padding: 10px; border-radius: 10px; cursor: pointer; }
 
         .display-box { min-height: 80px; border: 1px solid #e4e6eb; border-radius: 12px; margin: 15px 0; padding: 15px; text-align: left; background: #f7f8fa; }
         .label { font-size: 11px; color: #65676b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         #txt-originale { color: #1a73e8; font-size: 18px; }
-        #txt-tradotto { color: #188038; font-size: 20px; font-weight: bold; margin-top: 5px; }
-        #txt-spiegazione { color: #65676b; font-size: 14px; font-style: italic; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px; }
+        #txt-tradotto { color: #188038; font-size: 20px; font-weight: bold; }
+        #txt-tutor { color: #444; font-size: 15px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; line-height: 1.4; }
         
         button#start-btn { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
         .mode-indicator { font-size: 12px; background: #e7f3ff; color: #1877f2; padding: 6px 12px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
@@ -31,37 +31,31 @@
     <div class="controls">
         <select id="lang-source">
             <option value="it-IT" selected>🇮🇹 Italiano</option>
-            <option value="en-US">🇺🇸 Inglese</option>
-            <option value="es-ES">🇪🇸 Spagnolo</option>
-            <option value="fr-FR">🇫🇷 Francese</option>
-            <option value="de-DE">🇩🇪 Tedesco</option>
             <option value="th-TH">🇹🇭 Thailandese</option>
+            <option value="en-US">🇺🇸 Inglese</option>
         </select>
         <button class="swap-btn" onclick="swapLangs()">⇄</button>
         <select id="lang-target">
+            <option value="th-TH" selected>🇹🇭 Thailandese</option>
             <option value="en-US">🇺🇸 Inglese</option>
             <option value="it-IT">🇮🇹 Italiano</option>
-            <option value="es-ES" selected>🇪🇸 Spagnolo</option>
-            <option value="fr-FR">🇫🇷 Francese</option>
-            <option value="de-DE">🇩🇪 Tedesco</option>
-            <option value="th-TH">🇹🇭 Thailandese</option>
         </select>
     </div>
 
     <div id="current-mode" class="mode-indicator">MODALITÀ: DIALOGO</div>
     
     <div class="display-box">
-        <div class="label">Tu hai detto:</div>
-        <div id="txt-originale">In attesa della voce...</div>
+        <div class="label">Input:</div>
+        <div id="txt-originale">In attesa...</div>
     </div>
 
     <div class="display-box">
-        <div class="label">Google Translate:</div>
+        <div class="label">Tutor (Google Translate):</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-spiegazione"></div>
+        <div id="txt-tutor">Dì "Spiegami..." per attivare il tutor.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA ASCOLTO CONTINUO</button>
+    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
 </div>
 
 <script>
@@ -75,98 +69,95 @@
     function swapLangs() {
         const s = document.getElementById('lang-source');
         const t = document.getElementById('lang-target');
-        const temp = s.value;
-        s.value = t.value;
-        t.value = temp;
+        const temp = s.value; s.value = t.value; t.value = temp;
     }
 
     recognition.onstart = () => {
-        document.getElementById('status').innerText = "🔴 IN ASCOLTO SENZA MANI";
-        document.getElementById('status').style.color = "#d93025";
+        document.getElementById('status').innerText = "🔴 ASCOLTO ATTIVO";
         document.getElementById('start-btn').style.display = "none";
     };
 
     recognition.onresult = async (event) => {
         const input = event.results[event.results.length - 1][0].transcript;
         const inputLower = input.toLowerCase().trim();
-        const sourceLangFull = document.getElementById('lang-source').value;
-        const targetLangFull = document.getElementById('lang-target').value;
-        
-        const sl = sourceLangFull.split('-')[0];
-        const tl = targetLangFull.split('-')[0];
+        const sFull = document.getElementById('lang-source').value;
+        const tFull = document.getElementById('lang-target').value;
+        const sl = sFull.split('-')[0];
+        const tl = tFull.split('-')[0];
 
         document.getElementById('txt-originale').innerText = input;
 
-        // MODALITÀ A: CONTROLLO PRONUNCIA
+        // 1. MODALITÀ ALLENAMENTO (Ripetizione)
         if (staRipetendo) {
-            const pulitoInput = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-            const pulitoTarget = fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-
-            if (pulitoInput.includes(pulitoTarget) || pulitoTarget.includes(pulitoInput)) {
-                aggiornaInterfaccia("Corretto!", "Pronuncia verificata");
-                await parla("Ottimo! Hai pronunciato bene.", "it-IT");
+            const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            const cleanTarget = fraseDaRipetere.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            
+            if (cleanIn.includes(cleanTarget) || cleanTarget.includes(cleanIn)) {
+                aggiornaUI("Corretto!", "Ottima pronuncia! Passiamo oltre.");
+                await parla("Ottimo lavoro!", "it-IT");
                 staRipetendo = false;
                 aggiornaModo("DIALOGO");
             } else {
-                aggiornaInterfaccia(fraseDaRipetere, "Riprova ancora...");
-                await parla("Non proprio. Ripeti: " + fraseDaRipetere, targetLangFull);
+                await parla("Riprova: " + fraseDaRipetere, tFull);
             }
             return;
         }
 
-        // MODALITÀ C: SUPPORTO
-        if (inputLower.includes("come si dice")) {
-            aggiornaModo("SUPPORTO");
-            const fraseIta = inputLower.replace("come si dice", "").trim();
-            const trad = await chiamaGoogleTranslate(fraseIta, sl, tl);
-            aggiornaInterfaccia(trad, "Ripeti questa frase");
-            await parla("Si dice: " + trad, targetLangFull);
-            fraseDaRipetere = trad;
+        // 2. MODALITÀ INSEGNANTE (Trigger: "Spiegami")
+        if (inputLower.includes("spiegami")) {
+            aggiornaModo("INSEGNANTE");
+            const argomento = inputLower.replace("spiegami", "").trim();
+            
+            // Qui simuliamo la spiegazione (in un caso reale chiameresti un'API di testo)
+            const spiegazione = `Per "${argomento}", si usa questa forma. Ecco un esempio pratico.`;
+            const esempioIta = `Frase di esempio con ${argomento}`;
+            const esempioStraniero = await chiamaGT(esempioIta, sl, tl);
+
+            document.getElementById('txt-tutor').innerText = spiegazione;
+            document.getElementById('txt-tradotto').innerText = esempioStraniero;
+
+            await parla(spiegazione, "it-IT");
+            await parla("Ripeti con me l'esempio: " + esempioStraniero, "it-IT");
+            await parla(esempioStraniero, tFull);
+
+            fraseDaRipetere = esempioStraniero;
             staRipetendo = true;
             aggiornaModo("ALLENAMENTO");
         } 
         
-        // MODALITÀ B: DIALOGO
+        // 3. MODALITÀ DIALOGO (Default)
         else {
             aggiornaModo("DIALOGO");
-            const trad = await chiamaGoogleTranslate(input, sl, tl);
-            aggiornaInterfaccia(trad, "Traduzione automatica");
-            await parla(trad, targetLangFull);
-            
-            // Conferma vocale opzionale in italiano per capire cosa è successo
-            setTimeout(async () => {
-                await parla("Hai detto: " + input, "it-IT");
-            }, 800);
+            const trad = await chiamaGT(input, sl, tl);
+            document.getElementById('txt-tradotto').innerText = trad;
+            document.getElementById('txt-tutor').innerText = "Traduzione rapida.";
+            await parla(trad, tFull);
         }
     };
 
-    async function chiamaGoogleTranslate(text, sl, tl) {
-        try {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            return data[0][0][0];
-        } catch (e) { return "Errore di connessione."; }
+    async function chiamaGT(text, sl, tl) {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURI(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return data[0][0][0];
     }
 
     function parla(testo, lang) {
         return new Promise((resolve) => {
             const ut = new SpeechSynthesisUtterance(testo);
             ut.lang = lang;
-            ut.rate = 0.85; // Velocità leggermente ridotta per scopi didattici
+            ut.rate = 0.85;
             ut.onend = resolve;
             window.speechSynthesis.speak(ut);
         });
     }
 
-    function aggiornaInterfaccia(tradotto, spiegazione) {
-        document.getElementById('txt-tradotto').innerText = tradotto;
-        document.getElementById('txt-spiegazione').innerText = spiegazione;
+    function aggiornaUI(trad, tutor) {
+        document.getElementById('txt-tradotto').innerText = trad;
+        document.getElementById('txt-tutor').innerText = tutor;
     }
 
-    function aggiornaModo(modo) {
-        document.getElementById('current-mode').innerText = "MODALITÀ: " + modo;
-    }
+    function aggiornaModo(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
 
     function inizia() {
         recognition.lang = document.getElementById('lang-source').value;
