@@ -16,6 +16,7 @@
             --text-main: #1e293b;
             --text-sub: #64748b;
             --accent: #10b981;
+            --error: #ef4444;
         }
 
         body { 
@@ -73,22 +74,22 @@
     </div>
 
     <div class="display-box">
-        <div class="label">Ultimo Input</div>
-        <div id="txt-originale">In attesa...</div>
+        <div class="label">Hai detto:</div>
+        <div id="txt-originale">...</div>
     </div>
 
     <div class="display-box">
-        <div class="label">Traduzione & Valutazione</div>
+        <div class="label">Correzione & Traduzione</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Parla per tradurre o ripeti la traduzione.</div>
+        <div id="txt-tutor">Il bot valuterà la tua pronuncia dopo ogni traduzione.</div>
     </div>
 
-    <button id="start-btn" onclick="inizia()">ATTIVA TRADUTTORE DINAMICO</button>
+    <button id="start-btn" onclick="inizia()">ATTIVA TUTOR CON CORREZIONE</button>
 </div>
 
 <script>
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = false; // Modificato per gestire meglio il cambio lingua
+    recognition.continuous = false;
     recognition.interimResults = false;
     
     let ultimaTraduzione = "";
@@ -102,7 +103,7 @@
 
     recognition.onstart = () => {
         const colore = ascoltandoStraniero ? "#3b82f6" : "#10b981";
-        const testo = ascoltandoStraniero ? "🔵 ASCOLTO PRONUNCIA" : "🔴 ASCOLTO ITALIANO";
+        const testo = ascoltandoStraniero ? "🔵 RIPETI LA TRADUZIONE" : "🔴 PARLA IN ITALIANO";
         document.getElementById('status').innerText = testo;
         document.getElementById('status').style.color = colore;
     };
@@ -119,24 +120,27 @@
 
         if (ascoltandoStraniero) {
             const targetPulito = ultimaTraduzione.toLowerCase().trim().replace(/[.,?!]/g, "");
-            // Confronto tollerante per la lingua straniera
+            
+            // LOGICA DI CORREZIONE
             if (inputLower === targetPulito || targetPulito.includes(inputLower)) {
                 updateUI("BRAVO!", "Pronuncia perfetta.");
                 await parla("Ottimo lavoro!", "it-IT");
+                ascoltandoStraniero = false;
             } else {
-                updateUI(ultimaTraduzione, "Pronuncia non perfetta, riprova in Italiano.");
+                // IL BOT CORREGGE L'ERRORE
+                updateUI("SBAGLIATO", "Riprova: " + ultimaTraduzione);
+                await parla("Pronuncia non corretta.", "it-IT");
+                await parla("Si dice: " + ultimaTraduzione, tFull);
+                // Resta in ascolto straniero per farti riprovare
             }
-            ascoltandoStraniero = false;
             return;
         }
 
-        // TRADUZIONE
+        // TRADUZIONE NORMALE
         const trad = await translate(input, sl, tl);
         ultimaTraduzione = trad;
-        updateUI(trad, "Prova a ripetere ora...");
+        updateUI(trad, "Ascolta e ripeti per praticare.");
         await parla(trad, tFull);
-        
-        // ATTIVA ASCOLTO STRANIERO PER IL PROSSIMO TURNO
         ascoltandoStraniero = true;
     };
 
@@ -153,7 +157,7 @@
         return new Promise(res => {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(testo);
-            u.lang = lang; u.rate = 0.85; u.volume = 1.0; u.onend = res;
+            u.lang = lang; u.rate = 0.8; u.volume = 1.0; u.onend = res;
             window.speechSynthesis.speak(u);
         });
     }
@@ -161,10 +165,12 @@
     function updateUI(tr, tut) {
         document.getElementById('txt-tradotto').innerText = tr;
         document.getElementById('txt-tutor').innerText = tut;
+        if(tr === "SBAGLIATO") document.getElementById('txt-tradotto').style.color = "#ef4444";
+        else document.getElementById('txt-tradotto').style.color = "#10b981";
     }
 
     function inizia() {
-        const sblocco = new SpeechSynthesisUtterance("Pronto");
+        const sblocco = new SpeechSynthesisUtterance("Tutor attivo");
         sblocco.lang = "it-IT";
         window.speechSynthesis.speak(sblocco);
         avviaRiconoscimento();
@@ -176,10 +182,7 @@
         try { recognition.start(); } catch(e) {}
     }
 
-    recognition.onend = () => {
-        // Se ha appena tradotto, riparte subito per ascoltare la pronuncia straniera
-        avviaRiconoscimento();
-    };
+    recognition.onend = () => avviaRiconoscimento();
 </script>
 </body>
 </html>
