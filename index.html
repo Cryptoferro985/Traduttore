@@ -136,7 +136,8 @@
 
     recognition.onresult = async (event) => {
         const input = event.results[event.results.length - 1][0].transcript;
-        const inputLower = input.toLowerCase().trim();
+        // CORREZIONE LOGICA: Pulizia profonda del testo
+        const inputLower = input.toLowerCase().trim().replace(/[.,?!]/g, ""); 
         const sFull = document.getElementById('lang-source').value;
         const tFull = document.getElementById('lang-target').value;
         const sl = sFull.split('-')[0];
@@ -158,7 +159,8 @@
             return;
         }
 
-        if (inputLower.includes("spiegami")) {
+        // TRIGGER COMANDI CON LOGICA RINFORZATA
+        if (inputLower.startsWith("spiegami")) {
             setMode("LEZIONE");
             const tema = inputLower.replace("spiegami", "").trim();
             const spiegazione = `Per "${tema}" si usa questa forma. Ripeti l'esempio.`;
@@ -166,15 +168,17 @@
             updateUI(esempioTrad, spiegazione);
             await parla(spiegazione, "it-IT");
             await parla(esempioTrad, tFull);
-            fraseTarget = esempioTrad; staRipetendo = true;
+            fraseTarget = esempioTrad; 
+            staRipetendo = true;
         } 
-        else if (inputLower.includes("come si dice")) {
+        else if (inputLower.startsWith("come si dice")) {
             setMode("SUPPORTO");
             const q = inputLower.replace("come si dice", "").trim();
             const trad = await translate(q, sl, tl);
             updateUI(trad, "Ripeti per imparare.");
             await parla("Si dice: " + trad, tFull);
-            fraseTarget = trad; staRipetendo = true;
+            fraseTarget = trad; 
+            staRipetendo = true;
         } else {
             setMode("DIALOGO");
             const trad = await translate(input, sl, tl);
@@ -209,7 +213,6 @@
     function setMode(m) { document.getElementById('current-mode').innerText = "MODALITÀ: " + m; }
 
     function inizia() {
-        // SBLOCCO AUDIO FORZATO
         const sblocco = new SpeechSynthesisUtterance("Audio attivo");
         sblocco.lang = "it-IT";
         window.speechSynthesis.speak(sblocco);
