@@ -46,10 +46,6 @@
         select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-size: 14px; outline: none; }
         .swap-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; color: var(--primary); }
 
-        .mode-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
-        .mode-btn { flex: 1; min-width: 100px; padding: 10px; font-size: 10px; font-weight: 700; border-radius: 12px; border: 2px solid #e2e8f0; cursor: pointer; background: white; color: var(--text-sub); transition: 0.2s; text-transform: uppercase; }
-        .mode-btn.active { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
-
         .mode-badge { display: inline-block; padding: 5px 15px; background: #eef2ff; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; }
 
         .display-box { text-align: left; background: #f1f5f9; padding: 18px; border-radius: 20px; margin-bottom: 12px; }
@@ -81,12 +77,6 @@
         </select>
     </div>
 
-    <div class="mode-selector">
-        <button id="btn-traduzione_semplice" class="mode-btn active" onclick="setManualMode('TRADUZIONE_SEMPLICE')">Traduzione Semplice</button>
-        <button id="btn-esercitazione" class="mode-btn" onclick="setManualMode('ESERCITAZIONE')">Esercitazione</button>
-        <button id="btn-lezione" class="mode-btn" onclick="setManualMode('LEZIONE')">Lezione</button>
-    </div>
-
     <div id="current-mode" class="mode-badge">MODALITÀ: TRADUZIONE SEMPLICE</div>
     
     <div class="display-box">
@@ -95,13 +85,13 @@
     </div>
 
     <div class="display-box">
-        <div class="label">Tutor & Traduzione</div>
+        <div class="label">Traduzione Google</div>
         <div id="txt-tradotto">...</div>
-        <div id="txt-tutor">Seleziona una modalità e attiva il microfono</div>
+        <div id="txt-tutor">Attiva il microfono e parla liberamente</div>
     </div>
 
     <div class="btn-group">
-        <button id="start-btn" onclick="inizia()">ATTIVA TUTOR VOCALE</button>
+        <button id="start-btn" onclick="inizia()">ATTIVA TRADUTTORE VOCALE</button>
     </div>
 </div>
 
@@ -109,30 +99,11 @@
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.continuous = true;
     recognition.interimResults = false;
-    
-    let currentMode = "TRADUZIONE_SEMPLICE";
-    let fraseTarget = "";
-    let staRipetendo = false;
 
     function swapLangs() {
         const s = document.getElementById('lang-source');
         const t = document.getElementById('lang-target');
         const temp = s.value; s.value = t.value; t.value = temp;
-    }
-
-    function setManualMode(m) {
-        currentMode = m;
-        staRipetendo = false;
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('btn-' + m.toLowerCase()).classList.add('active');
-        document.getElementById('current-mode').innerText = "MODALITÀ: " + m.replace('_', ' ');
-        
-        const info = {
-            'TRADUZIONE_SEMPLICE': 'Traduzione istantanea libera.',
-            'ESERCITAZIONE': 'Dì qualcosa e ti sfiderò a ripeterlo.',
-            'LEZIONE': 'Spiegherò la grammatica di ciò che dici.'
-        };
-        updateUI("...", info[m]);
     }
 
     recognition.onstart = () => {
@@ -142,7 +113,6 @@
 
     recognition.onresult = async (event) => {
         const input = event.results[event.results.length - 1][0].transcript;
-        const inputLower = input.toLowerCase().trim();
         const sFull = document.getElementById('lang-source').value;
         const tFull = document.getElementById('lang-target').value;
         const sl = sFull.split('-')[0];
@@ -150,52 +120,19 @@
 
         document.getElementById('txt-originale').innerText = input;
 
-        if (staRipetendo) {
-            const cleanIn = inputLower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-            const cleanTarget = fraseTarget.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-            if (cleanIn.includes(cleanTarget) || cleanTarget.includes(cleanIn)) {
-                updateUI("BRAVO!", "Pronuncia perfetta.");
-                await parla("Ottimo!", "it-IT");
-                staRipetendo = false;
-            } else {
-                await parla("Riprova: " + fraseTarget, tFull);
-            }
-            return;
-        }
-
-        if (currentMode === "LEZIONE") {
-            const spiegazione = `Per "${inputLower}" si usa questa forma. Ripeti l'esempio.`;
-            const esempioTrad = await translate("Esempio di " + inputLower, sl, tl);
-            updateUI(esempioTrad, spiegazione);
-            await parla(spiegazione, "it-IT");
-            await parla(esempioTrad, tFull);
-            fraseTarget = esempioTrad; 
-            staRipetendo = true;
-        } 
-        else if (currentMode === "ESERCITAZIONE") {
-            const trad = await translate(input, sl, tl);
-            updateUI(trad, "Ripeti per imparare.");
-            await parla("Si dice: " + trad, tFull);
-            fraseTarget = trad; 
-            staRipetendo = true;
-        } 
-        else { 
-            const trad = await translate(input, sl, tl);
-            updateUI(trad, "Traduzione istantanea");
-            await parla(trad, tFull);
-        }
+        const trad = await translate(input, sl, tl);
+        updateUI(trad, "Traduzione istantanea");
+        await parla(trad, tFull);
     };
 
-    // FUNZIONE TRADUZIONE OTTIMIZZATA PER GOOGLE TRANSLATE PRECISO
     async function translate(text, sl, tl) {
         try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
             const res = await fetch(url);
             const data = await res.json();
-            // Estrae la stringa corretta dall'array di risposta di Google
             return data[0].map(item => item[0]).join("");
         } catch (e) { 
-            console.error("Errore traduzione:", e);
+            console.error("Errore Google Translate:", e);
             return "Errore di connessione."; 
         }
     }
@@ -215,7 +152,7 @@
     }
 
     function inizia() {
-        const sblocco = new SpeechSynthesisUtterance("Audio attivo");
+        const sblocco = new SpeechSynthesisUtterance("Traduttore attivo");
         sblocco.lang = "it-IT";
         window.speechSynthesis.speak(sblocco);
         recognition.lang = document.getElementById('lang-source').value;
